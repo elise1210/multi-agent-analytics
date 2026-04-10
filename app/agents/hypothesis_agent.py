@@ -4,6 +4,12 @@ def generate_hypothesis(eda_result, query, mode="api"):
     """
     query = query.lower()
 
+    KNOWLEDGE_BASE = {
+    "noise - residential": "Commonly caused by loud music, parties, or neighbor disturbances.",
+    "noise - street": "Often related to traffic, construction, or public activity.",
+    "noise - commercial": "Usually comes from businesses such as bars, restaurants, or shops.",
+    "noise - vehicle": "Associated with car horns, engines, or traffic congestion."
+    }
     if "error" in eda_result:
         return "Unable to generate hypothesis due to data issue."
 
@@ -33,6 +39,7 @@ def generate_hypothesis(eda_result, query, mode="api"):
 
     # Clean text
     clean_complaint = top_complaint.replace("Noise - ", "").lower()
+    extra_info = KNOWLEDGE_BASE.get(top_complaint.lower(), "")
 
     # Intent detection
     # Only use intent logic in API mode
@@ -73,21 +80,24 @@ def generate_hypothesis(eda_result, query, mode="api"):
         # =========================
         elif intent == "complaint":
             return f"""
-    📊 Answer
-    The most common type of noise complaint is **{top_complaint}**.
+        📊 Answer
+        The most common type of noise complaint is **{top_complaint}**.
 
-    📌 Evidence
-    - {top_complaint}: {top_value} complaints ({top_pct:.1f}% of total)
+        📌 Evidence
+        - {top_complaint}: {top_value} complaints ({top_pct:.1f}% of total)
 
-    💡 Insight
-    This indicates that {clean_complaint} is the dominant noise issue in the dataset.
+        📌 Context
+        {extra_info}
 
-    ---
+        💡 Insight
+        This indicates that {clean_complaint} is the dominant noise issue in the dataset.
 
-    📊 Additional Context
-    - Total complaints analyzed: {total}
-    - Borough with highest complaints: {top_borough} ({borough_value} cases, {borough_pct:.1f}%)
-    """
+        ---
+
+        📊 Additional Context
+        - Total complaints analyzed: {total}
+        - Borough with highest complaints: {top_borough} ({borough_value} cases, {borough_pct:.1f}%)
+        """
 
         # =========================
         # CASE 3: Trend question
