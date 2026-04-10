@@ -41,9 +41,15 @@ def generate_hypothesis(eda_result, query, mode="api"):
 
         if "borough" in query:
             intent = "borough"
+
         elif "type" in query or "kind" in query:
             intent = "complaint"
-        elif "trend" in query or "time" in query:
+
+        elif "trend" in query or "time" in query or "change" in query:
+            intent = "trend"
+
+        # time-based queries should ALSO trigger trend
+        elif "last" in query or "days" in query or "week" in query or "month" in query:
             intent = "trend"
 
         # =========================

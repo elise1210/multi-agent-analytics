@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>NYC Analytics Agent</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #f5f7fa;
+            text-align: center;
+            padding: 40px;
+        }
+
+        h2 {
+            color: #2c3e50;
+        }
+
+        input {
+            padding: 10px;
+            width: 400px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #output {
+            margin-top: 20px;
+            text-align: left;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 60%;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        ul {
+            text-align: left;
+            width: 400px;
+            margin: auto;
+        }
+
+        li {
+            cursor: pointer;
+            margin: 5px 0;
+        }
+
+        li:hover {
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+
+<h2>📊 NYC Noise Complaint Analyzer</h2>
+
+<input type="text" id="question" placeholder="Ask a question...">
+<button onclick="sendQuery()">Submit</button>
+
+<p id="status"></p>
+<div id="output"></div>
+
+<hr>
+
+<h3>📌 Sample Questions</h3>
+
+<ul>
+    <li onclick="fillQuestion('which borough has highest complaints in last 30 days')">
+    which borough has highest complaints in last 30 days
+    </li>
+
+    <li onclick="fillQuestion('which type of noise complaints is highest in last 30 days')">
+        which type of noise complaints is highest in last 30 days
+    </li>
+
+    <li onclick="fillQuestion('how does noise trend change in last 30 days')">
+        how does noise trend change in last 30 days
+    </li>
+
+    <li onclick="fillQuestion('noise complaints last 7 days')">
+        noise complaints last 7 days
+    </li>
+    <li onclick="fillQuestion('which type of noise complaints is highest between 2024-01-01 and 2024-01-15')">
+    which type of noise complaints is highest between 2024-01-01 and 2024-01-15
+    </li>
+</ul>
+
+<script>
+function fillQuestion(q) {
+    document.getElementById("question").value = q;
+    sendQuery();
+}
+
+async function sendQuery() {
+    console.log("🔥 sendQuery triggered");
+    const question = document.getElementById("question").value;
+    const output = document.getElementById("output");
+    const status = document.getElementById("status");
+
+    if (!question.trim()) {
+        alert("Please enter a question.");
+        return;
+    }
+
+    output.innerHTML = "";
+    status.innerHTML = "⏳ Processing...";
+
+    try {
+        const response = await fetch("http://127.0.0.1:8001/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ question: question })
+        });
+
+        const data = await response.json();
+
+        status.innerHTML = "✅ Done";
+        output.innerHTML = `
+        <div style="line-height:1.6;">
+        ${data.answer.replace(/\n/g, "<br>")}
+        </div>
+        `;
+        if (data.eda_result.plot) {
+            output.innerHTML += `
+                <br><br>
+                <div style="font-weight:bold; margin-top:10px;">📈 Trend Visualization</div>
+                <img 
+                    src="http://127.0.0.1:8001/static/${data.eda_result.plot}?${Date.now()}" 
+                    width="500"
+                    style="border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); margin-top:10px;"
+                >
+            `;
+        }
+    } catch (error) {
+        status.innerHTML = "❌ Error";
+        output.innerHTML = "Failed to connect to backend.";
+    }
+}
+</script>
+
+</body>
+</html>

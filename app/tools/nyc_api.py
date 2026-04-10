@@ -1,56 +1,88 @@
 import requests
 from datetime import datetime, timedelta
+import re
 
 BASE_URL = "https://data.cityofnewyork.us/resource/erm2-nwe9.json"
 
 
-def fetch_nyc_data(query: str, limit: int = 1000):
-    """
-    Fetch NYC 311 noise complaint data dynamically
-    """
-
+def fetch_nyc_data(query: str, limit: int = 20000):
     query = query.lower()
 
-    # Default filter (noise)
     complaint_filter = "complaint_type LIKE '%Noise%'"
-
-    # Default time (recent baseline)
     time_filter = None
 
-    # Dynamic time handling
-    if "last 7 days" in query:
-        date = datetime.now() - timedelta(days=7)
-        time_filter = f"created_date >= '{date.strftime('%Y-%m-%dT%H:%M:%S')}'"
+    # last X days
+    match = re.search(r"last (\d+) days", query)
 
-    elif "last 30 days" in query:
+    if match:
+        days = int(match.group(1))
+        date = datetime.now() - timedelta(days=days)
+        time_filter = f"created_date >= '{date.strftime('%Y-%m-%dT%H:%M:%S')}'"
+    #2026-04-08
+    date_match = re.search(r"(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})", query)
+
+    if date_match:
+        year, month, day = date_match.groups()
+        start = f"{year}-{int(month):02d}-{int(day):02d}T00:00:00"
+        end   = f"{year}-{int(month):02d}-{int(day):02d}T23:59:59"
+
+        time_filter = f"created_date >= '{start}' AND created_date <= '{end}'"
+    #between
+    range_match = re.search(
+        r"between (\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2}) and (\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})",
+        query
+    )
+
+    if range_match:
+        y1, m1, d1, y2, m2, d2 = range_match.groups()
+
+        start = f"{y1}-{int(m1):02d}-{int(d1):02d}T00:00:00"
+        end   = f"{y2}-{int(m2):02d}-{int(d2):02d}T23:59:59"
+
+        time_filter = f"created_date >= '{start}' AND created_date <= '{end}'"
+
+    # fallback
+    elif "trend" in query or "change" in query:
         date = datetime.now() - timedelta(days=30)
         time_filter = f"created_date >= '{date.strftime('%Y-%m-%dT%H:%M:%S')}'"
 
-    elif "2023" in query:
-        time_filter = (
-            "created_date >= '2023-01-01T00:00:00' AND "
-            "created_date <= '2023-12-31T23:59:59'"
-        )
-
-    # Combine filters
     if time_filter:
         where_clause = f"{complaint_filter} AND {time_filter}"
     else:
         where_clause = complaint_filter
-    
-    params = {
-        "$limit": limit,
-        "$where": where_clause,
-        "$order": "created_date DESC"
-    }
 
-    response = requests.get(BASE_URL, params=params)
+    all_data = []
+    offset = 0
+    batch_size = 1000
 
-    if response.status_code != 200:
-        print("API failed")
-        return []
+    while True:
+        params = {
+            "$limit": batch_size,
+            "$offset": offset,
+            "$where": where_clause,
+            "$order": "created_date DESC"   
+        }
 
-    return response.json()
+        response = requests.get(BASE_URL, params=params)
+
+        if response.status_code != 200:
+            print("API failed")
+            break
+
+        batch = response.json()
+
+        if not batch:
+            break
+
+        all_data.extend(batch)
+        offset += batch_size
+
+        if len(all_data) >= limit:
+            break
+        if offset > 50000:
+            break
+
+    return all_data[:limit]
 
 
 # TEST

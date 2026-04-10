@@ -6,8 +6,18 @@ from app.agents.collect_agent import collect_data
 from app.agents.eda_agent import run_eda
 from app.agents.hypothesis_agent import generate_hypothesis
 
-app = FastAPI()
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # allow all for now
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # request schema
 class QueryRequest(BaseModel):
