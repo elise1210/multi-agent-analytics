@@ -8,7 +8,13 @@ from app.agents.hypothesis_agent import generate_hypothesis
 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from pathlib import Path
 
+@app.get("/", response_class=HTMLResponse)
+def serve_frontend():
+    html_path = Path("frontend/index.html")
+    return html_path.read_text(encoding="utf-8")
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
