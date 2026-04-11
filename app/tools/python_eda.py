@@ -45,36 +45,39 @@ def analyze_data(data):
             .to_dict()
         )
 
-        # ensure meaningful trend
-        if len(daily_counts) < 2:
-            print("⚠️ Not enough data points for trend, but still plotting")
-
-        # peak day
         if daily_counts:
             peak_day = max(daily_counts, key=daily_counts.get)
             peak_value = daily_counts[peak_day]
-            dates = list(daily_counts.keys())
-            values = list(daily_counts.values())
 
-            filename = f"trend_{int(time.time())}.png"
-            filepath = f"app/static/{filename}"
+            # ✅ only plot if >= 2 days
+            if len(daily_counts) >= 2:
+                dates = list(daily_counts.keys())
+                values = list(daily_counts.values())
 
-            plt.figure()
-            plt.plot(dates, values)
-            plt.xticks(rotation=45)
-            plt.title("Noise Complaints Trend")
-            plt.tight_layout()
+                filename = f"trend_{int(time.time())}.png"
+                filepath = f"app/static/{filename}"
 
-            plt.savefig(filepath)
-            plt.close()
+                plt.figure()
+                plt.plot(dates, values)
+                plt.xticks(rotation=45)
+                plt.title("Noise Complaints Trend")
+                plt.tight_layout()
+
+                plt.savefig(filepath)
+                plt.close()
+            else:
+                filename = None  # if single day no plot
+
         else:
             peak_day = None
             peak_value = 0
+            filename = None
 
     else:
         daily_counts = {}
         peak_day = None
         peak_value = 0
+        filename = None
 
     result = {
         "total_count": total_count,
