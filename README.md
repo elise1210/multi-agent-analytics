@@ -1,8 +1,8 @@
-NYC Noise Complaint Analytics Agent
+## NYC Noise Complaint Analytics Agent
 
 Live Application
 
-Service URL:
+**Service URL:**
 https://multi-agent-analytics-git-1018522235899.europe-west1.run.app
 
 Health check:
@@ -48,7 +48,7 @@ Uses pandas and matplotlib to compute and visualize:
 	•	complaint distribution
 	•	borough aggregation
 	•	time trends (groupby)
-	•	peak day
+	•	peak day#
 	•	top vs second comparison
     • trend visualization (saved as images)
 ### Example Visualization
