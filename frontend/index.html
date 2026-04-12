@@ -136,8 +136,16 @@ async function sendQuery() {
 
         status.innerHTML = "✅ Done";
         output.innerHTML = `
-        <div style="line-height:1.6;">
+        <div style="line-height:1.6; font-size:15px;">
+
+        <div style="font-size:18px; font-weight:bold; margin-bottom:10px;">
+        📌 Key Finding
+        </div>
+
+        <div style="margin-bottom:15px;">
         ${data.answer.replace(/\n/g, "<br>")}
+        </div>
+
         </div>
         `;
         if (data.eda_result.plot) {
@@ -146,8 +154,7 @@ async function sendQuery() {
                 <div style="font-weight:bold; margin-top:10px;">📈 Trend Visualization</div>
                 <img 
                     src="https://multi-agent-analytics-git-1018522235899.europe-west1.run.app/static/${data.eda_result.plot}?${Date.now()}"  
-                    width="500"
-                    style="border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); margin-top:10px;"
+                    style="width:100%; max-width:600px; border-radius:12px; margin-top:10px;"
                 >
             `;
         }

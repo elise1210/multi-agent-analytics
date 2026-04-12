@@ -18,6 +18,9 @@ def generate_hypothesis(eda_result, query, mode="api"):
     borough = eda_result.get("borough_distribution", {})
     trend = eda_result.get("daily_trend", {})
 
+    peak_day = eda_result.get("peak_day", None)
+    peak_value = eda_result.get("peak_value", 0)
+
     # Get top complaint
     if top:
         top_complaint = max(top, key=top.get)
@@ -25,6 +28,16 @@ def generate_hypothesis(eda_result, query, mode="api"):
     else:
         top_complaint = "Unknown"
         top_value = 0
+
+    # Method 1: compare with second highest
+    if len(top) > 1:
+        sorted_items = sorted(top.items(), key=lambda x: x[1], reverse=True)
+        second_complaint, second_value = sorted_items[1]
+        gap = top_value - second_value
+    else:
+        second_complaint = "Unknown"
+        second_value = 0
+        gap = 0
 
     # Get top borough
     if borough:
@@ -108,15 +121,20 @@ def generate_hypothesis(eda_result, query, mode="api"):
                 values = list(trend.values())
 
                 if len(values) >= 2:
-                    return f"""
-    📅 Trend Analysis
-    Complaint volume changed from {values[0]} to {values[-1]} between {dates[0]} and {dates[-1]}.
+                    peak_text = ""
+                    if peak_day:
+                        peak_text = f"\nThe highest complaint volume occurs on {peak_day} with {peak_value} cases, indicating a temporal spike."
 
-    💡 Insight
-    This suggests short-term variation in noise reporting behavior.
-    """
-        
-        return "Trend data is not available for this query."
+                    return f"""
+        📅 Trend Analysis
+        Complaint volume changed from {values[0]} to {values[-1]} between {dates[0]} and {dates[-1]}.
+
+        💡 Insight
+        This suggests short-term variation in noise reporting behavior.
+        {peak_text}
+        """
+            
+            return "Trend data is not available for this query."
 
 
 
@@ -128,19 +146,18 @@ def generate_hypothesis(eda_result, query, mode="api"):
     - Borough with highest complaints: {top_borough} ({borough_value} cases, {borough_pct:.1f}%)
 
     💡 Key Insight
-    The data shows a strong concentration of complaints in {top_borough}, where 
-    {clean_complaint} alone accounts for a significant share of all reported issues. 
-    This indicates that complaint patterns are not evenly distributed, but instead 
-    dominated by specific categories and geographic areas.
+    Because {top_complaint} accounts for {top_pct:.1f}% of all complaints and exceeds {second_complaint} by {gap} cases, complaints are highly concentrated in {top_borough}. 
+
+    This indicates that noise issues are driven by a dominant category rather than being evenly distributed across complaint types.
 
     📈 Interpretation
-    The dominance of {clean_complaint} suggests localized environmental or behavioral 
-    factors driving complaint frequency. In {top_borough}, higher population density, 
-    urban infrastructure, and activity patterns likely contribute to elevated noise levels.
+    This pattern suggests that localized environmental or behavioral factors are driving complaint frequency. 
+    In {top_borough}, higher population density and urban activity likely contribute to elevated noise levels.
 
     📌 Supporting Evidence
-    - {top_complaint} accounts for {top_pct:.1f}% of all complaints
-    - {top_borough} contributes {borough_pct:.1f}% of total complaints
+    - {top_complaint}: {top_value} cases ({top_pct:.1f}%)
+    - {top_borough}: {borough_value} cases ({borough_pct:.1f}%)
+    - Difference vs {second_complaint}: {gap} cases
     """
 
     if trend:
@@ -149,6 +166,9 @@ def generate_hypothesis(eda_result, query, mode="api"):
 
         if len(values) >= 2:
             hypothesis += f"\n📅 Temporal Insight\nComplaint volume changed from {values[0]} to {values[-1]} between {dates[0]} and {dates[-1]}, indicating short-term variation in reporting activity."
+
+            if peak_day:
+                hypothesis += f"\nThe highest complaint volume occurs on {peak_day} with {peak_value} cases, indicating a temporal spike in noise reports."
 
     return hypothesis
 

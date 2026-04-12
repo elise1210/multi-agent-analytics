@@ -11,27 +11,21 @@ def fetch_nyc_data(query: str, limit: int = 20000):
     complaint_filter = "complaint_type LIKE '%Noise%'"
     time_filter = None
 
-    # last X days
-    match = re.search(r"last (\d+) days", query)
-
-    if match:
-        days = int(match.group(1))
-        date = datetime.now() - timedelta(days=days)
-        time_filter = f"created_date >= '{date.strftime('%Y-%m-%dT%H:%M:%S')}'"
-    #2026-04-08
-    date_match = re.search(r"(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})", query)
-
-    if date_match:
-        year, month, day = date_match.groups()
-        start = f"{year}-{int(month):02d}-{int(day):02d}T00:00:00"
-        end   = f"{year}-{int(month):02d}-{int(day):02d}T23:59:59"
-
-        time_filter = f"created_date >= '{start}' AND created_date <= '{end}'"
-    #between
+    # priority: between > specific date > last X days > fallback
+    # between
     range_match = re.search(
         r"between (\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2}) and (\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})",
         query
     )
+
+    # specific date
+    date_match = re.search(r"(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})", query)
+    # today / yesterday
+    today_match = "today" in query
+    yesterday_match = "yesterday" in query
+    # last X days
+    match = re.search(r"last (\d+) days", query)
+
 
     if range_match:
         y1, m1, d1, y2, m2, d2 = range_match.groups()
@@ -41,10 +35,40 @@ def fetch_nyc_data(query: str, limit: int = 20000):
 
         time_filter = f"created_date >= '{start}' AND created_date <= '{end}'"
 
-    # fallback
+    elif today_match:
+        today = datetime.now().strftime("%Y-%m-%d")
+        start = f"{today}T00:00:00"
+        end   = f"{today}T23:59:59"
+
+        time_filter = f"created_date >= '{start}' AND created_date <= '{end}'"
+
+    elif yesterday_match:
+        yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        start = f"{yesterday}T00:00:00"
+        end   = f"{yesterday}T23:59:59"
+
+        time_filter = f"created_date >= '{start}' AND created_date <= '{end}'"
+
+
+    elif date_match:
+        year, month, day = date_match.groups()
+
+        start = f"{year}-{int(month):02d}-{int(day):02d}T00:00:00"
+        end   = f"{year}-{int(month):02d}-{int(day):02d}T23:59:59"
+
+        time_filter = f"created_date >= '{start}' AND created_date <= '{end}'"
+
+    elif match:
+        days = int(match.group(1))
+        date = datetime.now() - timedelta(days=days)
+
+        time_filter = f"created_date >= '{date.strftime('%Y-%m-%dT%H:%M:%S')}'"
+
     elif "trend" in query or "change" in query:
         date = datetime.now() - timedelta(days=30)
+
         time_filter = f"created_date >= '{date.strftime('%Y-%m-%dT%H:%M:%S')}'"
+    
 
     if time_filter:
         where_clause = f"{complaint_filter} AND {time_filter}"
