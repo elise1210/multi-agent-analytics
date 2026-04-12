@@ -8,27 +8,23 @@ https://multi-agent-analytics-git-1018522235899.europe-west1.run.app
 Health check:
 https://multi-agent-analytics-git-1018522235899.europe-west1.run.app/health
 
-Overview
+## Overview
 
 This project implements a **multi-agent analytics system** that reproduces the first three steps of a real-world data analysis workflow:
 
-	1.	Collect real-world data dynamically
-
-	2.	Perform exploratory data analysis (EDA)
-
-	3.	Generate a data-driven hypothesis 
+1. Collect real-world data dynamically
+2. Perform exploratory data analysis (EDA)
+3. Generate a data-driven hypothesis 
 
 The system analyzes NYC 311 noise complaint data using real-time API queries and produces structured analytical insights.
 
-Architecture (Multi-Agent Pattern)
+## Architecture (Multi-Agent Pattern)
 
 The system uses a pipeline (orchestrator-handoff) multi-agent design:
 
-	•	Collect Agent (collect_agent.py, collect_data)
-
-	•	EDA Agent (eda_agent.py, run_eda)
-
-	•	Hypothesis Agent (hypothesis_agent.py, generate_hypothesis)
+- Collect Agent (collect_agent.py, collect_data)
+- EDA Agent (eda_agent.py, run_eda)
+- Hypothesis Agent (hypothesis_agent.py, generate_hypothesis)
 
 Orchestrated in app/main.py:
 
@@ -38,43 +34,85 @@ eda = run_eda(data)
 
 answer = generate_hypothesis(eda, query)
 
+## Project Structure
+```text
+multi-agent-analytics/
+│
+├── app/
+│   ├── main.py                  # FastAPI entrypoint (orchestration)
+│   ├── agents/
+│   │   ├── collect_agent.py     # Data collection agent
+│   │   ├── eda_agent.py         # EDA agent
+│   │   └── hypothesis_agent.py  # Hypothesis agent
+│   │
+│   ├── tools/
+│   │   ├── nyc_api.py           # NYC Open Data API integration
+│   │   └── python_eda.py        # Pandas + matplotlib analysis
+│   │
+│   └── static/                 # Generated visualization files
+│
+├── frontend/
+│   └── index.html              # Frontend UI
+│
+├── assets/
+│   └── trend_example.png       # Example visualization (README)
+│
+├── Dockerfile
+└── README.md
+```
+
+## Run Locally
+
+### 1. Start Backend
+```bash
+uvicorn app.main:app --reload --port 8001
+```
+### 2. Start Frontend
+```bash
+cd frontend
+python -m http.server 3000
+```
+
+### 3. Open in Browser
+http://127.0.0.1:3000
+
+## Sample Queries
+
+Try the following example queries to explore different analysis scenarios:
+
+- which borough has highest complaints in last 30 days  
+- which type of noise complaints is highest in last 30 days  
+- how does noise trend change in last 30 days  
+- noise complaints last 7 days  
+- which type of noise complaints is highest between 2024-01-01 and 2024-01-15    
+
 ## Step 1: **Collect (API Integration)**
 
-	•	File: app/tools/nyc_api.py
-
-	•	Function: fetch_nyc_data
+- File: app/tools/nyc_api.py  
+- Function: fetch_nyc_data   
 
 Retrieves real-time data from NYC Open Data API.
 
 Supports:
 
-	•	last X days
-
-	•	specific date
-
-	•	between dates
-
-	•	today / yesterday
+- last X days
+- specific date
+- between dates
+- today / yesterday
 
 ## Step 2: **EDA (Tool Calling)**
 
-	•	File: app/tools/python_eda.py
-
-	•	Function: analyze_data
+- File: app/tools/python_eda.py
+- Function: analyze_data
 
 Uses pandas and matplotlib to compute and visualize:
 
-	•	complaint distribution
-
-	•	borough aggregation
-
-	•	time trends (groupby)
-
-	•	peak day
-
-	•	top vs second comparison
-
-    • trend visualization (saved as images)
+- complaint distribution
+- borough aggregation
+- time trends (groupby)
+- peak day
+- top vs second comparison
+- trend visualization (saved as images)
 
 ### Example Visualization
 
@@ -82,19 +120,15 @@ Uses pandas and matplotlib to compute and visualize:
 
 ## Step 3: **Hypothesis (Data Memo)**
 
-	•	File: app/agents/hypothesis_agent.py
-
-	•	Function: generate_hypothesis
+- File: app/agents/hypothesis_agent.py  
+- Function: generate_hypothesis  
 
 Outputs structured insights:
 
-	•	Key Finding
-
-	•	Supporting Evidence
-
-	•	Trend Insight
-
-	•	Interpretation
+- Key Finding
+- Supporting Evidence
+- Trend Insight
+- Interpretation
 
 
 ## Core Requirements
@@ -104,7 +138,6 @@ Outputs structured insights:
 **Agent Framework** → Custom agent orchestration built with FastAPI  
 
 - File: app/main.py  
-
 - Function: chat()
 
 The system follows a modular agent design similar to modern agent frameworks.
@@ -112,13 +145,11 @@ The system follows a modular agent design similar to modern agent frameworks.
 **Tool Calling** → Python EDA tool 
 
 - File: app/tools/python_eda.py  
-
 - Function: analyze_data()
 
 **Non-trivial Data** → NYC Open Data API  
 
 - File: app/tools/nyc_api.py  
-
 - Function: fetch_nyc_data()
 
 **Multi-agent Pattern** → 3 agents (collect_agent.py / eda_agent.py / hypothesis_agent.py)
@@ -127,22 +158,18 @@ The system follows a modular agent design similar to modern agent frameworks.
 
 
 
-Elective Features
+## Elective Features
 
-Data visualization (matplotlib)
-
-Dynamic query parsing
-
-Data Memo style output
+- Data visualization (matplotlib)  
+- Dynamic query parsing  
+- Data Memo style output  
 
 ## Summary
 
 This system simulates a real analytics workflow:
 
-	•	dynamic data retrieval
-
-	•	programmatic analysis
-
-	•	evidence-based reasoning
+- dynamic data retrieval
+- programmatic analysis
+- evidence-based reasoning
 
 and produces structured, interpretable insights including visualization-based evidence.
