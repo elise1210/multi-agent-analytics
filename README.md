@@ -160,9 +160,17 @@ The system follows a modular agent design similar to modern agent frameworks.
 
 ## Elective Features
 
-- Data visualization (matplotlib)  
-- Dynamic query parsing  
-- Data Memo style output  
+- **Code Execution**  
+  - File: app/tools/python_eda.py  
+  - Uses pandas and matplotlib to compute statistics and generate visualizations at runtime  
+
+- **Data Visualization**  
+  - File: app/tools/python_eda.py  
+  - Generates trend plots and serves them via FastAPI static files  
+
+- **Artifacts (Visualization Files)**  
+  - File: app/static/  
+  - Generated plots are saved as PNG files and reused by the frontend   
 
 ## Summary
 
