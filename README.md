@@ -101,15 +101,31 @@ Outputs structured insights:
 
 **Frontend** → frontend/index.html
 
-**Tool Calling** → python_eda.py
+**Agent Framework** → Custom agent orchestration built with FastAPI  
 
-**Non-trivial Data** → NYC Open Data API
+- File: app/main.py  
+
+- Function: chat()
+
+The system follows a modular agent design similar to modern agent frameworks.
+
+**Tool Calling** → Python EDA tool 
+
+- File: app/tools/python_eda.py  
+
+- Function: analyze_data()
+
+**Non-trivial Data** → NYC Open Data API  
+
+- File: app/tools/nyc_api.py  
+
+- Function: fetch_nyc_data()
 
 **Multi-agent Pattern** → 3 agents (collect_agent.py / eda_agent.py / hypothesis_agent.py)
 
-**Deployed** → Cloud Run URL above
+**Deployed** → Cloud Run (URL above)
 
-**Agent Framework** → FastAPI (app/main.py)
+
 
 Elective Features
 
@@ -119,14 +135,14 @@ Dynamic query parsing
 
 Data Memo style output
 
-Summary
+## Summary
 
 This system simulates a real analytics workflow:
 
 	•	dynamic data retrieval
 
 	•	programmatic analysis
-    
+
 	•	evidence-based reasoning
 
 and produces structured, interpretable insights including visualization-based evidence.
