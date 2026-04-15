@@ -3,8 +3,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import time  
+import re
+from datetime import datetime, timedelta
 
-def analyze_data(data):
+def analyze_data(data, query=None):
     """
     Perform EDA on NYC 311 data
     """
@@ -38,12 +40,43 @@ def analyze_data(data):
         df["created_date"] = pd.to_datetime(df["created_date"], errors="coerce")
         df = df.dropna(subset=["created_date"])
 
-        daily_counts = (
-            df.groupby(df["created_date"].dt.date)
-            .size()
-            .sort_index()
-            .to_dict()
+        # group first
+        trend_series = df.groupby(df["created_date"].dt.date).size()
+
+        end_date = datetime.now().date()
+        start_date = None
+
+        match = re.search(r"last (\d+) days", query or "")
+        if match:
+            days = int(match.group(1))
+            start_date = end_date - timedelta(days=days)
+
+        range_match = re.search(
+            r"between (\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2}) and (\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})",
+            query or ""
         )
+        if range_match:
+            y1, m1, d1, y2, m2, d2 = range_match.groups()
+            start_date = datetime(int(y1), int(m1), int(d1)).date()
+            end_date   = datetime(int(y2), int(m2), int(d2)).date()
+
+        elif "today" in (query or ""):
+            start_date = end_date
+
+        elif "yesterday" in (query or ""):
+            start_date = end_date - timedelta(days=1)
+            end_date = start_date
+
+        if start_date is None:
+            start_date = trend_series.index.min()
+            end_date = trend_series.index.max()
+
+        full_range = pd.date_range(start=start_date, end=end_date)
+
+        trend_series = trend_series.reindex(full_range.date, fill_value=0)
+
+        daily_counts = trend_series.to_dict()
+        
 
         if daily_counts:
             peak_day = max(daily_counts, key=daily_counts.get)
@@ -57,12 +90,43 @@ def analyze_data(data):
                 filename = f"trend_{int(time.time())}.png"
                 filepath = f"app/static/{filename}"
 
-                plt.figure()
-                plt.plot(dates, values)
-                plt.xticks(rotation=45)
-                plt.title("Noise Complaints Trend")
-                plt.tight_layout()
+                plt.figure(figsize=(10, 4))
+                plt.plot(dates, values, marker='o', linewidth=2)
+                plt.grid(True, linestyle='--', alpha=0.5)
+                if peak_day in dates:
+                    peak_index = dates.index(peak_day)
 
+                    plt.scatter(
+                        dates[peak_index],
+                        values[peak_index],
+                        color='red',
+                        s=80,
+                        zorder=5,
+                        label='Peak'
+                    )
+
+                    plt.annotate(
+                        f"{peak_value}",
+                        (dates[peak_index], values[peak_index]),
+                        textcoords="offset points",
+                        xytext=(0,10),
+                        ha='center',
+                        fontsize=9,
+                        color='red'
+                    )
+
+                if len(dates) > 0:
+                    plt.title(f"Noise Complaints Trend ({dates[0]} → {dates[-1]})")
+                else:
+                    plt.title("Noise Complaints Trend")
+
+                plt.xlabel("Date")
+                plt.ylabel("Number of Complaints")
+
+                plt.xticks(rotation=45)
+
+                plt.tight_layout()
+    
                 plt.savefig(filepath)
                 plt.close()
             else:

@@ -64,7 +64,7 @@ def chat(request: QueryRequest):
     data = collect_tool.func(query)
 
     # Step 2: EDA
-    eda_result = eda_tool.func(data)
+    eda_result = eda_tool.func(data, query)
 
     # Step 3: Hypothesis
     hypothesis = hypothesis_tool.func(eda_result, query, mode="api")

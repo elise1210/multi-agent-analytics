@@ -30,7 +30,7 @@ Orchestrated in app/main.py:
 
 data = collect_tool.func(query)
 
-eda = eda_tool.func(data)
+eda = eda_tool.func(data, query)
 
 answer = hypothesis_tool.func(eda, query)
 
@@ -120,6 +120,8 @@ Uses pandas and matplotlib to compute and visualize:
 - top vs second comparison
 - trend visualization (saved as images)
 
+The EDA process dynamically adapts to the user's query (e.g., time ranges such as "last 7 days", "between dates", or "today"), ensuring that analysis is performed over the relevant subset of data.
+
 ### Example Visualization
 
 ![Trend Example](assets/trend_example.png)
@@ -177,7 +179,7 @@ The EDA tool performs statistical aggregation and grouping operations (e.g., com
 
 - **Data Visualization**  
   - File: app/tools/python_eda.py  
-  - Generates trend plots and serves them via FastAPI static files  
+  - Generates time-series plots with continuous date indexing, missing-day handling, and peak highlighting (annotated maximum values) to improve interpretability  
 
 - **Artifacts (Visualization Files)**  
   - File: app/static/  
