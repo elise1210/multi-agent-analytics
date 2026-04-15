@@ -51,94 +51,63 @@ def generate_hypothesis(eda_result, query, mode="api"):
     borough_pct = (borough_value / total * 100) if total > 0 else 0
 
     # Clean text
-    clean_complaint = top_complaint.replace("Noise - ", "").lower()
+    #clean_complaint = top_complaint.replace("Noise - ", "").lower()
     extra_info = KNOWLEDGE_BASE.get(top_complaint.lower(), "")
 
     # Intent detection
+
     # Only use intent logic in API mode
-    if mode == "api":
-        intent = "general"
+    
+    intent = "general"
 
-        if "borough" in query:
-            intent = "borough"
+    if "borough" in query:
+        intent = "borough"
 
-        elif "type" in query or "kind" in query:
-            intent = "complaint"
+    elif "type" in query or "kind" in query:
+        intent = "complaint"
 
-        elif "trend" in query or "time" in query or "change" in query:
-            intent = "trend"
+    elif "trend" in query or "time" in query or "change" in query:
+        intent = "trend"
 
-        # time-based queries should ALSO trigger trend
-        elif "last" in query or "days" in query or "week" in query or "month" in query:
-            intent = "trend"
+    # time-based queries should ALSO trigger trend
+    elif "last" in query or "days" in query or "week" in query or "month" in query:
+        intent = "trend"
 
-        # =========================
-        # CASE 1: Borough question
-        # =========================
-        if intent == "borough":
-            return f"""
-    📊 Answer
-    The borough with the highest number of noise complaints is **{top_borough}**.
+    # Dynamic Key Insight
 
-    📌 Evidence
-    - {top_borough}: {borough_value} complaints ({borough_pct:.1f}% of total)
-
-    💡 Insight
-    This suggests that noise complaints are most concentrated in {top_borough}, 
-    reflecting localized urban activity patterns.
+    if intent == "borough":
+        key_insight = f"""Because {top_borough} accounts for {borough_pct:.1f}% of all complaints, noise reports are geographically concentrated rather than evenly distributed.
+    """
+    elif intent == "complaint":
+        key_insight = f"""Because {top_complaint} accounts for {top_pct:.1f}% of all complaints and exceeds {second_complaint} by {gap} cases, complaints are highly concentrated in a single category.
+    """
+    elif intent == "trend":
+        key_insight = f"""Complaint activity shows noticeable variation over time rather than remaining stable.
+    """
+    else:
+        key_insight = f"""Noise complaints show uneven distribution across categories and locations.
     """
 
-        # =========================
-        # CASE 2: Complaint type question
-        # =========================
-        elif intent == "complaint":
-            return f"""
-        📊 Answer
-        The most common type of noise complaint is **{top_complaint}**.
 
-        📌 Evidence
-        - {top_complaint}: {top_value} complaints ({top_pct:.1f}% of total)
+    # Dynamic Interpretation
 
-        📌 Context
-        {extra_info}
+    if intent == "borough":
+        interpretation = """This suggests that complaint activity is not evenly distributed across locations, indicating localized concentration of noise issues."""
 
-        💡 Insight
-        This indicates that {clean_complaint} is the dominant noise issue in the dataset.
+    elif intent == "complaint":
+        interpretation = "This suggests that a single source is disproportionately driving complaints rather than a balanced mix of noise types."
 
-        ---
+        if extra_info:
+            interpretation += f" This aligns with known patterns where {extra_info.lower()}"
 
-        📊 Additional Context
-        - Total complaints analyzed: {total}
-        - Borough with highest complaints: {top_borough} ({borough_value} cases, {borough_pct:.1f}%)
-        """
+    elif intent == "trend":
+        interpretation = """This indicates short-term fluctuations in reporting activity rather than a stable long-term trend."""
 
-        # =========================
-        # CASE 3: Trend question
-        # =========================
-        elif intent == "trend":
-            if trend:
-                dates = list(trend.keys())
-                values = list(trend.values())
+    else:
+        interpretation = """This reflects underlying variation in how complaints are distributed across the dataset."""
 
-                if len(values) >= 2:
-                    peak_text = ""
-                    if peak_day:
-                        peak_text = f"\nThe highest complaint volume occurs on {peak_day} with {peak_value} cases, indicating a temporal spike."
+    # Build unified Data Memo
 
-                    return f"""
-        📅 Trend Analysis
-        Complaint volume changed from {values[0]} to {values[-1]} between {dates[0]} and {dates[-1]}.
-
-        💡 Insight
-        This suggests short-term variation in noise reporting behavior.
-        {peak_text}
-        """
-            
-            return "Trend data is not available for this query."
-
-
-
-    # Build hypothesis
     hypothesis = f"""
     📊 Analysis Summary
     - Total complaints analyzed: {total}
@@ -146,13 +115,10 @@ def generate_hypothesis(eda_result, query, mode="api"):
     - Borough with highest complaints: {top_borough} ({borough_value} cases, {borough_pct:.1f}%)
 
     💡 Key Insight
-    Because {top_complaint} accounts for {top_pct:.1f}% of all complaints and exceeds {second_complaint} by {gap} cases, complaints are highly concentrated in {top_borough}. 
-
-    This indicates that noise issues are driven by a dominant category rather than being evenly distributed across complaint types.
+    {key_insight.strip()}
 
     📈 Interpretation
-    This pattern suggests that localized environmental or behavioral factors are driving complaint frequency. 
-    In {top_borough}, higher population density and urban activity likely contribute to elevated noise levels.
+    {interpretation.strip()}
 
     📌 Supporting Evidence
     - {top_complaint}: {top_value} cases ({top_pct:.1f}%)
@@ -160,15 +126,20 @@ def generate_hypothesis(eda_result, query, mode="api"):
     - Difference vs {second_complaint}: {gap} cases
     """
 
-    if trend:
+    # Add trend evidence
+    if trend and len(trend)>0:
         dates = list(trend.keys())
         values = list(trend.values())
 
         if len(values) >= 2:
-            hypothesis += f"\n📅 Temporal Insight\nComplaint volume changed from {values[0]} to {values[-1]} between {dates[0]} and {dates[-1]}, indicating short-term variation in reporting activity."
+            hypothesis += f"""
 
+    📅 Temporal Evidence
+    Complaint volume changed from {values[0]} to {values[-1]} between {dates[0]} and {dates[-1]}.
+    """
             if peak_day:
-                hypothesis += f"\nThe highest complaint volume occurs on {peak_day} with {peak_value} cases, indicating a temporal spike in noise reports."
+                hypothesis += f"\nPeak occurred on {peak_day} with {peak_value} cases."
+
 
     return hypothesis
 

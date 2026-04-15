@@ -9,9 +9,28 @@ from app.agents.hypothesis_agent import generate_hypothesis
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
+from langchain.tools import Tool
 from pathlib import Path
 
 app = FastAPI()
+
+collect_tool = Tool(
+    name="collect_data",
+    func=collect_data,
+    description="Fetch NYC noise complaint data from API"
+)
+
+eda_tool = Tool(
+    name="run_eda",
+    func=run_eda,
+    description="Perform EDA analysis on collected data"
+)
+
+hypothesis_tool = Tool(
+    name="generate_hypothesis",
+    func=generate_hypothesis,
+    description="Generate data-driven hypothesis from EDA results"
+)
 
 @app.get("/", response_class=HTMLResponse)
 def serve_frontend():
@@ -42,13 +61,13 @@ def chat(request: QueryRequest):
     query = request.question
 
     # Step 1: Collect
-    data = collect_data(query)
+    data = collect_tool.func(query)
 
     # Step 2: EDA
-    eda_result = run_eda(data)
+    eda_result = eda_tool.func(data)
 
     # Step 3: Hypothesis
-    hypothesis = generate_hypothesis(eda_result, query, mode="api")
+    hypothesis = hypothesis_tool.func(eda_result, query, mode="api")
 
     return {
         "question": query,

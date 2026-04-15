@@ -28,11 +28,11 @@ The system uses a pipeline (orchestrator-handoff) multi-agent design:
 
 Orchestrated in app/main.py:
 
-data = collect_data(query)
+data = collect_tool.func(query)
 
-eda = run_eda(data)
+eda = eda_tool.func(data)
 
-answer = generate_hypothesis(eda, query)
+answer = hypothesis_tool.func(eda, query)
 
 ## Project Structure
 ```text
@@ -57,11 +57,17 @@ multi-agent-analytics/
 ├── assets/
 │   └── trend_example.png       # Example visualization (README)
 │
+├── requirements.txt 
 ├── Dockerfile
 └── README.md
 ```
 
 ## Run Locally
+
+### Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
 ### 1. Start Backend
 ```bash
@@ -125,27 +131,32 @@ Uses pandas and matplotlib to compute and visualize:
 
 Outputs structured insights:
 
-- Key Finding
-- Supporting Evidence
-- Trend Insight
+- Analysis Summary
+- Key Insight
 - Interpretation
+- Supporting Evidence
+- Temporal Evidence
 
 
 ## Core Requirements
 
 **Frontend** → frontend/index.html
 
-**Agent Framework** → Custom agent orchestration built with FastAPI  
+**Agent Framework** → LangChain (Tool-based agent framework)
 
 - File: app/main.py  
-- Function: chat()
+- Components: Tool (collect_tool, eda_tool, hypothesis_tool)
 
-The system follows a modular agent design similar to modern agent frameworks.
+The system uses LangChain's Tool abstraction to wrap each agent (collect, EDA, hypothesis) as callable components.
 
-**Tool Calling** → Python EDA tool 
+These tools are orchestrated through a structured pipeline in the FastAPI backend, implementing an orchestrator-handoff multi-agent pattern.
+
+**Tool Calling** → Python EDA tool
 
 - File: app/tools/python_eda.py  
 - Function: analyze_data()
+
+The EDA tool performs statistical aggregation and grouping operations (e.g., complaint distribution, borough aggregation, and time trends) over the collected data and returns structured results used for hypothesis generation.
 
 **Non-trivial Data** → NYC Open Data API  
 
