@@ -32,7 +32,7 @@ data = collect_tool.func(query)
 
 eda = eda_tool.func(data, query)
 
-answer = hypothesis_tool.func(eda, query)
+answer = hypothesis_tool.func(eda, query, mode="api")
 
 ## Project Structure
 ```text
@@ -121,6 +121,7 @@ Uses pandas and matplotlib to compute and visualize:
 - trend visualization (saved as images)
 
 The EDA process dynamically adapts to the user's query (e.g., time ranges such as "last 7 days", "between dates", or "today"), ensuring that analysis is performed over the relevant subset of data.
+This ensures that the analysis is not static, but responsive to different analytical questions and time-based constraints.
 
 ### Example Visualization
 
