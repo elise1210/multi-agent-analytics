@@ -9,7 +9,7 @@ from app.agents.hypothesis_agent import generate_hypothesis
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
-from langchain.tools import Tool
+from langchain_core.tools import Tool
 from pathlib import Path
 
 app = FastAPI()
